@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Climate Locations{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-0">Area-Specific Climate Locations</h2>
+        <p class="text-muted mb-0">Design-day outdoor temperatures, solar irradiance, wind speed, and ground temperatures.</p>
+    </div>
+    {% if user.is_staff %}
+        <a href="/admin/core/climatelocation/add/" class="btn btn-outline-primary btn-sm">+ Add Location (Admin)</a>
+    {% endif %}
+</div>
+
+<form method="get" class="card p-3 mb-4">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search city or state...">
+        </div>
+        <div class="col-md-4">
+            <select name="zone" class="form-select">
+                <option value="">All Climate Zones</option>
+                {% for val, label in zones %}
+                    <option value="{{ val }}" {% if selected_zone == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </div>
+</form>
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>State</th>
+                    <th>Climate Zone</th>
+                    <th>Design Day</th>
+                    <th>T_max / T_min (&deg;C)</th>
+                    <th>Peak Solar (W/m&sup2;)</th>
+                    <th>Wind (m/s)</th>
+                    <th>Ground (&deg;C)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loc in locations %}
+                <tr>
+                    <td class="fw-semibold">{{ loc.name }}</td>
+                    <td>{{ loc.state }}</td>
+                    <td><span class="badge bg-secondary">{{ loc.climate_zone }}</span></td>
+                    <td>{{ loc.design_day_type }}</td>
+                    <td>{{ loc.t_max }} / {{ loc.t_min }}</td>
+                    <td>{{ loc.peak_solar|floatformat:0 }}</td>
+                    <td>{{ loc.wind_speed }}</td>
+                    <td>{{ loc.ground_temp }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No climate locations found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

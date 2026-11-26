@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<div class="hero-banner p-5 mb-4 shadow">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-6 fw-bold">Design Area-Specific Shelters for Thermal Comfort</h1>
+            <p class="lead mt-3">
+                ShelterTherm simulates 24-hour indoor temperatures using real building material properties,
+                Indian climate zones, ventilation, and thermal mass&mdash;before anything is built.
+            </p>
+            <div class="mt-4 d-flex gap-2 flex-wrap">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'design_create' %}" class="btn btn-light btn-lg fw-semibold">Create New Shelter</a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-lg">My Designs</a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg fw-semibold">Get Started Free</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Log in</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="bg-white text-dark rounded-3 p-3 shadow-sm">
+                <h6 class="text-uppercase text-muted small mb-2">Library Snapshot</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><strong>{{ material_count }}</strong> Building Materials</li>
+                    <li class="mb-2"><strong>{{ location_count }}</strong> Indian Climate Locations</li>
+                    <li><strong>{{ design_count }}</strong> Simulated Shelter Designs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>1. Pick Location &amp; Materials</h5>
+            <p class="text-muted mb-0">
+                Choose from pre-loaded Indian climate zones (or override values) and build multi-layer
+                wall, roof, and floor assemblies from our thermal material library.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>2. 24-Hour Thermal Simulation</h5>
+            <p class="text-muted mb-0">
+                Our Python &amp; NumPy engine computes ISO 6946 U-values, 10-minute indoor temperatures,
+                IMAC adaptive comfort bands, and peak cooling/heating loads.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>3. Compare &amp; Export Reports</h5>
+            <p class="text-muted mb-0">
+                Compare up to 4 shelter designs side-by-side, read plain-language engineering suggestions,
+                and download interactive CSV time-series or PDF summary reports.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

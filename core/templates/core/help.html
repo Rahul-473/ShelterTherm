@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Help &amp; Model Guide{% endblock %}
+{% block content %}
+<h2 class="mb-3">Help &amp; How ShelterTherm Works</h2>
+
+<div class="card p-4 mb-4">
+    <h5>Key Thermal Terms Explained</h5>
+    <ul>
+        <li><strong>Thermal Conductivity (k, W/m&middot;K):</strong> How easily heat moves through a material. Insulation (EPS, PUF, thatch) has very low k; metals (GI sheet) have very high k.</li>
+        <li><strong>U-Value (W/m&sup2;&middot;K):</strong> Heat passing through 1 m&sup2; of a wall or roof per degree temperature difference. Lower U-values keep heat out better.</li>
+        <li><strong>Thermal Mass:</strong> Heavy materials (brick, concrete, adobe) store heat and delay temperature peaks.</li>
+        <li><strong>Air Changes per Hour (ACH):</strong> How many times indoor air is replaced with outdoor air each hour. High night-time ACH (8–12) cools a shelter down overnight.</li>
+        <li><strong>IMAC Comfort Band:</strong> The India Model for Adaptive Comfort estimates the acceptable indoor temperature range from the daily mean outdoor temperature.</li>
+    </ul>
+</div>
+
+<div class="card p-4 mb-4">
+    <h5>Model Limitations</h5>
+    <p class="mb-0">
+        ShelterTherm is an early-stage design calculator. It simulates a single representative 24-hour design day
+        assuming one well-mixed indoor air zone and 1D heat transfer through walls, roof, and floor. It does not
+        model relative humidity, detailed CFD airflow, structural strength, construction costs, or full-year weather.
+    </p>
+</div>
+{% endblock %}

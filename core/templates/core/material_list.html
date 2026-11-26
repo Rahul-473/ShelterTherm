@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Material Library{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-0">Building Material Library</h2>
+        <p class="text-muted mb-0">Thermal properties used for envelope U-values and transient heat-storage simulation.</p>
+    </div>
+    {% if user.is_staff %}
+        <a href="/admin/core/material/add/" class="btn btn-outline-primary btn-sm">+ Add Material (Admin)</a>
+    {% endif %}
+</div>
+
+<form method="get" class="card p-3 mb-4">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search material name or source...">
+        </div>
+        <div class="col-md-4">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for val, label in categories %}
+                    <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </div>
+</form>
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Category</th>
+                    <th>Conductivity k (W/m&middot;K)</th>
+                    <th>Density (kg/m&sup3;)</th>
+                    <th>Specific Heat (J/kg&middot;K)</th>
+                    <th>Solar Absorptance</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in materials %}
+                <tr>
+                    <td class="fw-semibold">{{ m.name }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ m.get_category_display }}</span></td>
+                    <td>{{ m.conductivity }}</td>
+                    <td>{{ m.density|floatformat:0 }}</td>
+                    <td>{{ m.specific_heat|floatformat:0 }}</td>
+                    <td>{{ m.absorptance }}</td>
+                    <td class="small text-muted">{{ m.source }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No materials found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

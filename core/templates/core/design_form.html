@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit {{ design.name }}{% else %}New Shelter Design{% endif %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>{% if is_edit %}Edit Design: {{ design.name }}{% else %}Create New Shelter Design{% endif %}</h2>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <!-- Step 1: Basics & Climate -->
+    <div class="card p-4 mb-4">
+        <h5 class="mb-3">1. Design Info &amp; Climate Location</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Design Name *</label>
+                {{ form.name }}
+                {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Location *</label>
+                {{ form.location }}
+                {% for e in form.location.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+                <label class="form-label">Notes / Description</label>
+                {{ form.description }}
+            </div>
+        </div>
+        <details class="mt-3">
+            <summary class="text-primary fw-semibold" style="cursor:pointer;">Optional: Override location climate values for this design</summary>
+            <div class="row g-3 mt-1">
+                <div class="col-md-2">
+                    <label class="form-label small">T_max (&deg;C)</label>
+                    {{ form.override_t_max }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">T_min (&deg;C)</label>
+                    {{ form.override_t_min }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Peak Solar (W/m&sup2;)</label>
+                    {{ form.override_peak_solar }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Wind (m/s)</label>
+                    {{ form.override_wind_speed }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Ground Temp (&deg;C)</label>
+                    {{ form.override_ground_temp }}
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <!-- Step 2: Geometry & Openings -->
+    <div class="card p-4 mb-4">
+        <h5 class="mb-3">2. Shelter Dimensions &amp; Openings (SI Units)</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Length (m) <small class="text-muted">[1–50]</small></label>
+                {{ form.length_m }}
+                {% for e in form.length_m.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Width (m) <small class="text-muted">[1–50]</small></label>
+                {{ form.width_m }}
+                {% for e in form.width_m.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Height (m) <small class="text-muted">[1.8–10]</small></label>
+                {{ form.height_m }}
+                {% for e in form.height_m.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">North Win (m&sup2;)</label>
+                {{ form.window_n_m2 }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">South Win (m&sup2;)</label>
+                {{ form.window_s_m2 }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">East Win (m&sup2;)</label>
+                {{ form.window_e_m2 }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">West Win (m&sup2;)</label>
+                {{ form.window_w_m2 }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Door (m&sup2;)</label>
+                {{ form.door_area_m2 }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Win SHGC <small class="text-muted">[0.1–0.95]</small></label>
+                {{ form.window_shgc }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Ventilation, Occupants & Comfort -->
+    <div class="card p-4 mb-4">
+        <h5 class="mb-3">3. Ventilation, Internal Loads &amp; Comfort Model</h5>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Day Ventilation (ACH)</label>
+                {{ form.day_ach }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Night Ventilation (ACH)</label>
+                {{ form.night_ach }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Occupants (people)</label>
+                {{ form.occupants }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Equipment Heat (W)</label>
+                {{ form.equipment_w }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Comfort Model</label>
+                {{ form.comfort_model }}
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check mb-2">
+                    {{ form.cool_roof_finish }}
+                    <label class="form-check-label fw-semibold">Apply White / Reflective Cool-Roof Finish</label>
+                    <div class="form-text mt-0">Reduces roof solar absorptance to 0.25.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Wall / Roof / Floor Material Layers -->
+    <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <h5 class="mb-0">4. Envelope Material Layers (Outside &rarr; Inside)</h5>
+                <small class="text-muted">Include at least one Wall, one Roof, and one Floor layer.</small>
+            </div>
+            <button type="button" id="add-layer-btn" class="btn btn-sm btn-outline-primary">+ Add Layer Row</button>
+        </div>
+
+        {{ formset.management_form }}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle" id="layers-table">
+                <thead>
+                    <tr>
+                        <th>Element</th>
+                        <th style="width: 90px;">Order</th>
+                        <th>Material</th>
+                        <th style="width: 150px;">Thickness (mm)</th>
+                        <th style="width: 80px;">Remove</th>
+                    </tr>
+                </thead>
+                <tbody id="layers-tbody">
+                    {% for lf in formset %}
+                    <tr class="layer-row">
+                        <td>{{ lf.id }}{{ lf.element }}</td>
+                        <td>{{ lf.order }}</td>
+                        <td>{{ lf.material }}</td>
+                        <td>{{ lf.thickness_mm }}</td>
+                        <td class="text-center">{% if lf.DELETE %}{{ lf.DELETE }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">Save &amp; Run Thermal Simulation</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+    </div>
+</form>
+
+<!-- Hidden template row for dynamic JS layer addition -->
+<table class="d-none">
+    <tbody id="empty-form-row">
+        <tr class="layer-row">
+            <td>{{ formset.empty_form.id }}{{ formset.empty_form.element }}</td>
+            <td>{{ formset.empty_form.order }}</td>
+            <td>{{ formset.empty_form.material }}</td>
+            <td>{{ formset.empty_form.thickness_mm }}</td>
+            <td class="text-center">{{ formset.empty_form.DELETE }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("add-layer-btn").addEventListener("click", function() {
+    const totalInput = document.getElementById("id_layers-TOTAL_FORMS");
+    const formIdx = parseInt(totalInput.value, 10);
+    const templateHtml = document.getElementById("empty-form-row").innerHTML.replace(/__prefix__/g, formIdx);
+    document.getElementById("layers-tbody").insertAdjacentHTML("beforeend", templateHtml);
+    totalInput.value = formIdx + 1;
+});
+</script>
+{% endblock %}

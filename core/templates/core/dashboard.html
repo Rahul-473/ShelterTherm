@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}My Designs{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-0">My Shelter Designs</h2>
+        <p class="text-muted mb-0">Your saved shelter configurations and latest thermal comfort verdicts.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'compare_designs' %}" class="btn btn-outline-primary">Compare Designs</a>
+        <a href="{% url 'design_create' %}" class="btn btn-primary">+ New Shelter Design</a>
+    </div>
+</div>
+
+{% if designs %}
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Design Name</th>
+                    <th>Location</th>
+                    <th>Size (m)</th>
+                    <th>Verdict</th>
+                    <th>Peak Indoor</th>
+                    <th>Comfort Hrs</th>
+                    <th>Peak Cooling</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in designs %}
+                <tr>
+                    <td>
+                        <a href="{% url 'design_detail' d.pk %}" class="fw-semibold text-decoration-none">{{ d.name }}</a>
+                        {% if d.cool_roof_finish %}<span class="badge bg-info text-dark ms-1">Cool Roof</span>{% endif %}
+                    </td>
+                    <td>{{ d.location.name }} <small class="text-muted">({{ d.location.climate_zone }})</small></td>
+                    <td>{{ d.length_m }} &times; {{ d.width_m }} &times; {{ d.height_m }}</td>
+                    <td>
+                        {% if d.result %}
+                            <span class="badge rounded-pill px-3 py-2 verdict-{{ d.result.verdict|lower }}">
+                                {{ d.result.verdict }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">Not run</span>
+                        {% endif %}
+                    </td>
+                    <td>{% if d.result %}{{ d.result.t_in_max|floatformat:1 }} &deg;C{% else %}&mdash;{% endif %}</td>
+                    <td>{% if d.result %}{{ d.result.comfortable_hours|floatformat:1 }} / 24 h{% else %}&mdash;{% endif %}</td>
+                    <td>{% if d.result %}{{ d.result.peak_cooling_w|floatformat:0 }} W{% else %}&mdash;{% endif %}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{% url 'design_detail' d.pk %}" class="btn btn-sm btn-outline-primary">Results</a>
+                        <a href="{% url 'design_edit' d.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <form method="post" action="{% url 'design_duplicate' d.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-dark">Copy</button>
+                        </form>
+                        <form method="post" action="{% url 'design_delete' d.pk %}" class="d-inline"
+                              onsubmit="return confirm('Delete {{ d.name }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card p-5 text-center">
+    <h4>No shelter designs yet</h4>
+    <p class="text-muted">Create your first shelter design to calculate U-values, 24-hour temperatures, and comfort metrics.</p>
+    <div>
+        <a href="{% url 'design_create' %}" class="btn btn-primary">Create Your First Design</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

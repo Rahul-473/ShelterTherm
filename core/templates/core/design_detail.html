@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}{{ design.name }} Results{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h2 class="mb-0">{{ design.name }}</h2>
+            <span class="badge rounded-pill fs-6 px-3 py-2 verdict-{{ result.verdict|lower }}">
+                Verdict: {{ result.verdict }}
+            </span>
+        </div>
+        <p class="text-muted mb-0 mt-1">
+            Location: <strong>{{ design.location }}</strong> &bull;
+            Outdoor: {{ effective_climate.t_min|floatformat:1 }}–{{ effective_climate.t_max|floatformat:1 }} &deg;C &bull;
+            Size: {{ design.length_m }} &times; {{ design.width_m }} &times; {{ design.height_m }} m
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'export_pdf' design.pk %}" class="btn btn-danger btn-sm">Download PDF</a>
+        <a href="{% url 'export_csv' design.pk %}" class="btn btn-success btn-sm">Download CSV</a>
+        <a href="{% url 'design_edit' design.pk %}" class="btn btn-outline-primary btn-sm">Edit Design</a>
+        <form method="post" action="{% url 'design_duplicate' design.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-dark btn-sm">Copy Variant</button>
+        </form>
+    </div>
+</div>
+
+{% if result.comfort_warning %}
+<div class="alert alert-warning">{{ result.comfort_warning }}</div>
+{% endif %}
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="small text-muted">Peak Indoor Temp</div>
+            <div class="fs-4 fw-bold">{{ result.t_in_max|floatformat:1 }} &deg;C</div>
+            <div class="small text-muted">at {{ result.peak_hour|floatformat:1 }} h (Min {{ result.t_in_min|floatformat:1 }} &deg;C)</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="small text-muted">Comfortable Hours</div>
+            <div class="fs-4 fw-bold">{{ result.comfortable_hours|floatformat:1 }} / 24 h</div>
+            <div class="small text-muted">Band: {{ result.comfort_low|floatformat:1 }}–{{ result.comfort_high|floatformat:1 }} &deg;C</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="small text-muted">Overheating Score</div>
+            <div class="fs-4 fw-bold">{{ result.overheating_dh|floatformat:1 }}</div>
+            <div class="small text-muted">degree-hours (lower is better)</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="small text-muted">Peak Cooling Load</div>
+            <div class="fs-4 fw-bold">{{ result.peak_cooling_w|floatformat:0 }} W</div>
+            <div class="small text-muted">{{ result.daily_cooling_kwh|floatformat:2 }} kWh/day (Heat: {{ result.peak_heating_w|floatformat:0 }} W)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3">24-Hour Indoor vs. Outdoor Temperature</h5>
+            <canvas id="tempChart" height="130"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3">Heat Flow Breakdown (UA, W/K)</h5>
+            <canvas id="uaChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Suggestions & Envelope Details -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3">Design Improvement Suggestions</h5>
+            <ul class="mb-0">
+                {% for tip in result.suggestions %}
+                    <li class="mb-2">{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3">Envelope U-Values &amp; Layers</h5>
+            <div class="d-flex gap-3 mb-3 flex-wrap">
+                <span class="badge bg-light text-dark border p-2">Wall U: <strong>{{ result.u_wall|floatformat:2 }}</strong> W/m&sup2;K</span>
+                <span class="badge bg-light text-dark border p-2">Roof U: <strong>{{ result.u_roof|floatformat:2 }}</strong> W/m&sup2;K</span>
+                <span class="badge bg-light text-dark border p-2">Floor U: <strong>{{ result.u_floor|floatformat:2 }}</strong> W/m&sup2;K</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Element</th><th>#</th><th>Material</th><th>Thickness</th></tr></thead>
+                    <tbody>
+                        {% for lyr in layers %}
+                        <tr>
+                            <td>{{ lyr.get_element_display }}</td>
+                            <td>{{ lyr.order }}</td>
+                            <td>{{ lyr.material.name }}</td>
+                            <td>{{ lyr.thickness_mm|floatformat:1 }} mm</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-secondary small">
+    <strong>Model Disclaimer:</strong> These results are early-stage engineering estimates based on a simplified
+    1D single-zone design-day model (humidity, detailed CFD airflow, and full-year weather are not modelled).
+    They should not be used as a certified building-energy calculation.
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const payload = {{ chart_json|safe }};
+const labels = payload.hours.map(h => h.toFixed(1) + "h");
+const bandLow = payload.hours.map(() => payload.comfort_low);
+const bandHigh = payload.hours.map(() => payload.comfort_high);
+
+new Chart(document.getElementById("tempChart"), {
+    type: "line",
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: "Comfort Upper (" + payload.comfort_high + " °C)",
+                data: bandHigh,
+                borderColor: "rgba(34, 197, 94, 0.35)",
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false,
+            },
+            {
+                label: "Comfort Band",
+                data: bandLow,
+                borderColor: "rgba(34, 197, 94, 0.35)",
+                backgroundColor: "rgba(34, 197, 94, 0.14)",
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: "-1",
+            },
+            {
+                label: "Indoor Air (°C)",
+                data: payload.t_in,
+                borderColor: "#dc2626",
+                backgroundColor: "#dc2626",
+                borderWidth: 2.5,
+                pointRadius: 0,
+                tension: 0.25,
+            },
+            {
+                label: "Outdoor Air (°C)",
+                data: payload.t_out,
+                borderColor: "#334155",
+                borderDash: [6, 4],
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.25,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+            x: { ticks: { maxTicksLimit: 12 } },
+            y: { title: { display: true, text: "Temperature (°C)" } }
+        }
+    }
+});
+
+new Chart(document.getElementById("uaChart"), {
+    type: "doughnut",
+    data: {
+        labels: payload.ua_labels,
+        datasets: [{
+            data: payload.ua_values,
+            backgroundColor: ["#2563eb", "#ea580c", "#16a34a", "#eab308", "#8b5cf6", "#06b6d4"]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } }
+    }
+});
+</script>
+{% endblock %}
